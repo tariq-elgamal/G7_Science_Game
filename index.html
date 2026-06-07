@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grade 7 Science — Final Exam Review Game</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+
+  /* ── HOME SCREEN ── */
+  #home { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; text-align: center; }
+  #home h1 { font-size: 2.4rem; font-weight: 700; color: #38bdf8; margin-bottom: 0.4rem; text-shadow: 0 0 30px #38bdf840; }
+  #home .sub { font-size: 1rem; color: #94a3b8; margin-bottom: 2.5rem; }
+  .level-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.2rem; width: 100%; max-width: 700px; }
+  .level-card { background: #1e293b; border: 2px solid #334155; border-radius: 16px; padding: 1.8rem 1.2rem; cursor: pointer; transition: all .2s; }
+  .level-card:hover { border-color: var(--clr); transform: translateY(-4px); box-shadow: 0 8px 24px #00000040; }
+  .level-card .icon { font-size: 2.4rem; margin-bottom: 0.8rem; }
+  .level-card h2 { font-size: 1.1rem; font-weight: 600; color: var(--clr); margin-bottom: 0.4rem; }
+  .level-card p { font-size: 0.82rem; color: #94a3b8; line-height: 1.5; }
+  .level-card .badge { display: inline-block; margin-top: 0.8rem; font-size: 0.72rem; padding: 3px 10px; border-radius: 20px; background: var(--clr-bg); color: var(--clr); font-weight: 600; }
+  .stars-earned { font-size: 1rem; margin-top: 0.6rem; min-height: 1.2rem; }
+
+  /* ── GAME SCREEN ── */
+  #game { display: none; min-height: 100vh; padding: 1rem; }
+  .game-header { display: flex; align-items: center; justify-content: space-between; max-width: 760px; margin: 0 auto 1.2rem; }
+  .game-header h2 { font-size: 1rem; font-weight: 600; color: #94a3b8; }
+  .score-bar { display: flex; gap: 1.2rem; align-items: center; }
+  .score-pill { background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 4px 14px; font-size: 0.82rem; color: #e2e8f0; }
+  .score-pill span { color: #38bdf8; font-weight: 700; }
+  #btn-home { background: none; border: 1px solid #475569; color: #94a3b8; border-radius: 8px; padding: 5px 12px; cursor: pointer; font-size: 0.78rem; }
+  #btn-home:hover { background: #1e293b; color: #e2e8f0; }
+
+  .progress-bar { max-width: 760px; margin: 0 auto 1.2rem; background: #1e293b; border-radius: 99px; height: 6px; }
+  .progress-fill { height: 6px; border-radius: 99px; background: linear-gradient(90deg, #38bdf8, #818cf8); transition: width .4s; }
+
+  .q-card { max-width: 760px; margin: 0 auto; background: #1e293b; border: 1.5px solid #334155; border-radius: 18px; padding: 2rem; }
+  .q-label { font-size: 0.72rem; font-weight: 700; letter-spacing: .1em; color: #64748b; text-transform: uppercase; margin-bottom: 0.8rem; }
+  .q-text { font-size: 1.05rem; line-height: 1.65; color: #e2e8f0; margin-bottom: 1.5rem; }
+
+  /* MCQ */
+  .options { display: grid; gap: 0.7rem; }
+  .opt-btn { background: #0f172a; border: 1.5px solid #334155; border-radius: 12px; padding: 0.9rem 1.2rem; text-align: left; color: #e2e8f0; font-size: 0.92rem; cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 12px; }
+  .opt-btn:hover:not(:disabled) { border-color: #38bdf8; background: #0c2233; }
+  .opt-btn .opt-letter { width: 28px; height: 28px; border-radius: 8px; background: #1e293b; border: 1.5px solid #334155; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.82rem; flex-shrink: 0; transition: all .15s; }
+  .opt-btn.correct { border-color: #22c55e; background: #052e16; }
+  .opt-btn.correct .opt-letter { background: #22c55e; border-color: #22c55e; color: #052e16; }
+  .opt-btn.wrong { border-color: #ef4444; background: #2d0d0d; }
+  .opt-btn.wrong .opt-letter { background: #ef4444; border-color: #ef4444; color: #fff; }
+  .opt-btn:disabled { cursor: default; }
+
+  /* True/False */
+  .tf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .tf-btn { padding: 1.2rem; border-radius: 14px; border: 2px solid #334155; background: #0f172a; color: #e2e8f0; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all .15s; }
+  .tf-btn:hover:not(:disabled) { background: #1e293b; }
+  .tf-btn.correct { border-color: #22c55e; background: #052e16; color: #86efac; }
+  .tf-btn.wrong { border-color: #ef4444; background: #2d0d0d; color: #fca5a5; }
+
+  /* Matching */
+  .match-area { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .match-col h3 { font-size: 0.75rem; font-weight: 700; letter-spacing: .08em; color: #64748b; text-transform: uppercase; margin-bottom: 0.6rem; }
+  .match-item { background: #0f172a; border: 1.5px solid #334155; border-radius: 10px; padding: 0.65rem 0.9rem; font-size: 0.85rem; margin-bottom: 0.5rem; cursor: pointer; transition: all .15s; line-height: 1.4; }
+  .match-item:hover { border-color: #38bdf8; }
+  .match-item.selected { border-color: #818cf8; background: #1e1b4b; }
+  .match-item.matched-ok { border-color: #22c55e; background: #052e16; color: #86efac; cursor: default; }
+  .match-item.matched-err { border-color: #ef4444; background: #2d0d0d; color: #fca5a5; }
+  .match-score { margin-top: 0.8rem; font-size: 0.85rem; color: #94a3b8; text-align: center; }
+
+  /* Feedback */
+  .feedback { margin-top: 1.2rem; padding: 0.9rem 1.1rem; border-radius: 12px; font-size: 0.88rem; line-height: 1.55; }
+  .feedback.ok { background: #052e16; border: 1px solid #22c55e; color: #86efac; }
+  .feedback.err { background: #2d0d0d; border: 1px solid #ef4444; color: #fca5a5; }
+  .feedback strong { display: block; font-size: 0.95rem; margin-bottom: 0.25rem; }
+
+  #btn-next { margin-top: 1.2rem; width: 100%; padding: 0.9rem; border-radius: 12px; border: none; background: #38bdf8; color: #0c2233; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all .15s; display: none; }
+  #btn-next:hover { background: #7dd3fc; }
+
+  /* ── RESULT SCREEN ── */
+  #result { display: none; min-height: 100vh; align-items: center; justify-content: center; flex-direction: column; padding: 2rem; text-align: center; }
+  .result-card { background: #1e293b; border: 2px solid #334155; border-radius: 20px; padding: 2.5rem 2rem; max-width: 480px; width: 100%; }
+  .result-card h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.4rem; }
+  .big-score { font-size: 3rem; font-weight: 800; margin: 1rem 0 0.3rem; }
+  .stars { font-size: 2rem; margin-bottom: 1rem; letter-spacing: 4px; }
+  .result-msg { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.6; }
+  .result-btns { display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center; }
+  .result-btns button { padding: 0.7rem 1.4rem; border-radius: 10px; border: 1.5px solid #475569; background: none; color: #e2e8f0; cursor: pointer; font-size: 0.9rem; font-weight: 600; }
+  .result-btns button.primary { background: #38bdf8; border-color: #38bdf8; color: #0c2233; }
+  .result-btns button:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="home">
+  <h1>🔬 Science Quest</h1>
+  <p class="sub">Grade 7 · Term 2 Final Exam Review · Academic Year 2025–2026</p>
+  <div class="level-grid">
+    <div class="level-card" style="--clr:#38bdf8;--clr-bg:#0c2233" onclick="startLevel('mcq')">
+      <div class="icon">🎯</div>
+      <h2>Level 1 — MCQ</h2>
+      <p>Multiple choice questions covering photosynthesis, ecosystems, biodiversity, and more.</p>
+      <div class="badge">40 Questions · 1 pt each</div>
+      <div class="stars-earned" id="stars-mcq"></div>
+    </div>
+    <div class="level-card" style="--clr:#a78bfa;--clr-bg:#1e1b4b" onclick="startLevel('tf')">
+      <div class="icon">✅</div>
+      <h2>Level 2 — True / False</h2>
+      <p>Decide whether each biology statement is true or false. Quick fire round!</p>
+      <div class="badge">10 Questions · 1 pt each</div>
+      <div class="stars-earned" id="stars-tf"></div>
+    </div>
+    <div class="level-card" style="--clr:#34d399;--clr-bg:#052e16" onclick="startLevel('match')">
+      <div class="icon">🔗</div>
+      <h2>Level 3 — Matching</h2>
+      <p>Match each scientific term to its correct definition. Test your vocabulary!</p>
+      <div class="badge">10 Pairs · 1 pt each</div>
+      <div class="stars-earned" id="stars-match"></div>
+    </div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game">
+  <div class="game-header">
+    <h2 id="level-title">Level 1 — MCQ</h2>
+    <div class="score-bar">
+      <div class="score-pill">Score <span id="score-disp">0</span></div>
+      <div class="score-pill">Q <span id="q-disp">1</span> / <span id="q-total">40</span></div>
+      <button id="btn-home" onclick="goHome()">⬅ Home</button>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="prog" style="width:0%"></div></div>
+  <div class="q-card">
+    <div class="q-label" id="q-label">Question 1</div>
+    <div class="q-text" id="q-text"></div>
+    <div id="q-body"></div>
+    <div id="feedback" class="feedback" style="display:none"></div>
+    <button id="btn-next" onclick="nextQuestion()">Next →</button>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="result" style="display:flex">
+  <div class="result-card" id="result-inner"></div>
+</div>
+
+<script>
+const MCQ = [
+  {q:"Cellular respiration is the process in which organisms break down food to release _____.",opts:["energy","nutrients","sugar","oxygen"],ans:0,exp:"Cellular respiration breaks down glucose to release energy (ATP) that cells can use."},
+  {q:"Which organisms use cellular respiration as a way to convert energy into a usable form?",opts:["seedless plants only","only photosynthetic organisms","only mammals","all organisms"],ans:3,exp:"All living organisms — from bacteria to humans — use cellular respiration."},
+  {q:"Photosynthesis is the process in which plants use energy from light to produce _____.",opts:["new cells","organelles","food","none of the above"],ans:2,exp:"Photosynthesis converts light energy into sugar (glucose) — the plant's food."},
+  {q:"Photosynthesis uses all of the following EXCEPT _____ to make food.",opts:["carbon dioxide","chemical energy","light energy","water"],ans:1,exp:"Chemical energy is a PRODUCT of photosynthesis, not a reactant."},
+  {q:"Which is the most likely reason photosynthesis does not occur in the deepest aphotic zone of a lake?",opts:["Sunlight does not reach the deepest aphotic zone.","Water pressure limits animal survival.","Not enough soil to support plant growth.","Not enough dissolved oxygen from the surface."],ans:0,exp:"'Aphotic' literally means 'without light' — no sunlight, no photosynthesis."},
+  {q:"Where does cellular respiration occur in a cell?",opts:["nucleus","chloroplast","mitochondria","cell membrane"],ans:2,exp:"The mitochondria are the 'powerhouses of the cell' where respiration takes place."},
+  {q:"Which of the following would eat a dead rabbit?",opts:["carnivore","detritivore","herbivore","omnivore"],ans:1,exp:"Detritivores feed on dead or decaying organic matter."},
+  {q:"Which of the following would eat a hamburger with lettuce on it?",opts:["carnivore","detritivore","herbivore","omnivore"],ans:3,exp:"An omnivore eats both meat and plants — like a hamburger with lettuce!"},
+  {q:"Which of the following eats only eucalyptus leaves?",opts:["carnivore","detritivore","herbivore","omnivore"],ans:2,exp:"Herbivores eat only plants. The koala is a classic example eating only eucalyptus."},
+  {q:"Which is most likely the FIRST step in a basic food chain?",opts:["The snake eats the mouse.","Plants make food using sunlight.","The Sun emits energy.","The hawk eats the snake."],ans:1,exp:"Food chains start with producers (plants) converting sunlight into food."},
+  {q:"Which organism would NOT be in the first trophic level of an energy pyramid?",opts:["dog","tree","grass","algae"],ans:0,exp:"The first trophic level = producers only. Dogs are consumers."},
+  {q:"Which is a model of feeding relationships?",opts:["protein building","food map","food web","sugar molecules"],ans:2,exp:"A food web shows the complex network of feeding relationships in an ecosystem."},
+  {q:"As you move upward in an energy pyramid, available energy _____.",opts:["decreases","increases","stays the same","is destroyed"],ans:0,exp:"Only about 10% of energy transfers to the next level — 90% is lost as heat."},
+  {q:"Which of the following does NOT move continuously through ecosystems?",opts:["water","aluminum","energy","nitrogen"],ans:2,exp:"Energy flows through ecosystems (not cycles) — it is ultimately lost as heat."},
+  {q:"Which of the following is NOT part of the water cycle?",opts:["nitrogen fixation","evaporation","condensation","precipitation"],ans:0,exp:"Nitrogen fixation is part of the nitrogen cycle, not the water cycle."},
+  {q:"Which step in the nitrogen cycle takes place AFTER animals eat plants?",opts:["Decaying waste returns nitrogen to soil.","Bacteria fix nitrogen in plant roots.","Plants use nitrogen from the soil.","Lightning changes nitrogen to compounds."],ans:0,exp:"After animals eat and excrete, decomposers break waste down, returning nitrogen to soil."},
+  {q:"Which is NOT an example of how bacteria aid in the nitrogen cycle?",opts:["nitrogen fixation","breaking down dead organisms","changing nitrogen compounds to atmospheric nitrogen","infecting tissue"],ans:3,exp:"Infecting tissue is harmful parasitism — not a role in the nitrogen cycle."},
+  {q:"Phytoplankton are said to release how much of Earth's atmospheric oxygen?",opts:["5%–10%","15%–20%","less than 5%","more than 50%"],ans:3,exp:"Phytoplankton produce over 50% of Earth's oxygen through photosynthesis!"},
+  {q:"Which process can release carbon to the air AND into the soil?",opts:["photosynthesis","decomposition","combustion","cellular respiration"],ans:1,exp:"Decomposition by microbes releases CO₂ into air and carbon compounds into soil."},
+  {q:"Which is NOT a way carbon is stored as a fossil fuel?",opts:["water","coal","oil","natural gas"],ans:0,exp:"Water is not a fossil fuel. Coal, oil, and natural gas are all fossil fuels."},
+  {q:"Both owls and snakes preying on mice in a forest is an example of _____.",opts:["mutualism","commensalism","competition","parasitism"],ans:2,exp:"Two species competing for the same prey (mice) is interspecific competition."},
+  {q:"Cooperative relationships involve populations where _____.",opts:["same species compete for resources","different species compete for resources","same species work together for survival","different species work together for survival"],ans:2,exp:"Cooperative relationships = members of the SAME species working together."},
+  {q:"A symbiotic relationship where one species benefits and the other is NOT affected is called _____.",opts:["mutualism","commensalism","parasitism","predation"],ans:1,exp:"Commensalism: (+, 0) — one benefits, one is unaffected."},
+  {q:"Clownfish among sea anemone tentacles (both benefit) is an example of _____.",opts:["parasitism","commensalism","competition","mutualism"],ans:3,exp:"Both species benefit: clownfish get protection, anemone gets food scraps — mutualism!"},
+  {q:"All the meerkats in a wildlife refuge make up which of the following?",opts:["population","community","biosphere","niche"],ans:0,exp:"A population = all individuals of ONE species in a specific area."},
+  {q:"What is the difference between a population and a community?",opts:["Population = all species; community = one species.","Population = one species; community = all species.","Population = species + nonliving things; community = all species.","The words mean the same thing."],ans:1,exp:"Population = one species; Community = all species living together in an area."},
+  {q:"A predator preventing rabbits from establishing in a new area is a _____ factor.",opts:["community","ecosystem","limiting","negative"],ans:2,exp:"A limiting factor restricts population growth — predation is a biological limiting factor."},
+  {q:"If there are no limiting factors, a population can reach its _____.",opts:["competition level","population potential","population density","biotic potential"],ans:3,exp:"Biotic potential = maximum possible growth rate with no limiting factors."},
+  {q:"What is the effect of population growth in an ecosystem?",opts:["fewer resources per individual","more resources in the ecosystem","less resources needed per individual","ecosystem grows larger"],ans:0,exp:"More individuals = more competition = fewer resources available for each one."},
+  {q:"Which is NOT an aquatic ecosystem?",opts:["freshwater","taiga","estuary","wetland"],ans:1,exp:"Taiga (boreal forest) is a terrestrial biome — a cold land ecosystem."},
+  {q:"Ecosystem has 150 organisms of 15 different species. What is the biodiversity index?",opts:["165","10","0.15","0.1"],ans:3,exp:"Biodiversity index = species ÷ total organisms = 15 ÷ 150 = 0.1"},
+  {q:"Which does NOT describe an ecosystem in dynamic equilibrium?",opts:["It constantly changes.","Its equilibrium becomes permanently unbalanced.","It can return to a balanced state.","It can respond to disruptions."],ans:1,exp:"Dynamic equilibrium means the ecosystem CAN return to balance after disruption."},
+  {q:"Which is a REGULATING service provided by ecosystems?",opts:["the water cycle","pollination","food production","natural resources"],ans:0,exp:"The water cycle regulates climate, flooding, and freshwater availability."},
+  {q:"Which statement is true of ponds but NOT lakes?",opts:["Plants surround the shore.","Surface water contains photosynthetic organisms.","Sunlight reaches the bottom.","People fill them with sediment for houses."],ans:2,exp:"Ponds are shallow enough for sunlight to reach the bottom — lakes are too deep."},
+  {q:"A wetland drained for a housing development is an example of _____.",opts:["habitat destruction","overexploitation","pollution","conservation"],ans:0,exp:"Removing or destroying a natural habitat is habitat destruction."},
+  {q:"Which is a CHEMICAL control used to help control invasive species?",opts:["using fences","using other species","using herbicides","using barriers"],ans:2,exp:"Herbicides are chemicals used to kill unwanted invasive plant species."},
+  {q:"Which is NOT one of the five major threats to biodiversity?",opts:["habitat destruction","invasive species","overexploitation","reclamation"],ans:3,exp:"Reclamation (restoring land) is NOT a threat — the five threats are: habitat loss, invasive species, overexploitation, pollution, and climate change."},
+  {q:"Which activity is most likely to PREVENT soil erosion and preserve biodiversity?",opts:["Plowing a field and not replanting.","Adding more cattle to grassland.","Burning forests to remove invasive plants.","Planting diverse crops with native trees and shrubs."],ans:3,exp:"Diverse planting with native species holds soil, supports wildlife, and preserves biodiversity."},
+  {q:"Invasive species like purple loosestrife threaten biodiversity because they _____.",opts:["help native species reproduce","outcompete native species and reduce biodiversity","improve soil quality","increase trophic levels"],ans:1,exp:"Invasive species dominate resources and crowd out native species, reducing diversity."},
+  {q:"Which process releases oxygen into the atmosphere as a byproduct?",opts:["Cellular respiration","Decomposition","Photosynthesis","Nitrogen fixation"],ans:2,exp:"Photosynthesis splits water molecules; oxygen is released as a byproduct."}
+];
+
+const TF = [
+  {q:"Chloroplasts are the location where photosynthesis takes place.",ans:true,exp:"Correct! Chloroplasts contain chlorophyll and are where photosynthesis occurs."},
+  {q:"Energy cycles through ecosystems because it returns to the Sun.",ans:false,exp:"False — energy FLOWS through ecosystems. It is lost as heat and does not cycle back."},
+  {q:"Available energy increases as it is transferred from one organism to another in a food chain.",ans:false,exp:"False — energy DECREASES at each level (~10% is transferred; 90% lost as heat)."},
+  {q:"Elements such as oxygen, nitrogen, and carbon cycle through an ecosystem repeatedly.",ans:true,exp:"Correct! Matter cycles through biogeochemical cycles — it is reused again and again."},
+  {q:"Nitrogen as found in the atmosphere can be directly used by plants and animals.",ans:false,exp:"False — atmospheric N₂ must first be 'fixed' by bacteria into usable compounds."},
+  {q:"Mutualism is any close relationship between different species.",ans:false,exp:"False — mutualism is specifically where BOTH species benefit (+/+). Symbiosis is the broad term for any close relationship."},
+  {q:"Tropical rain forests and coral reefs are examples of ecosystems with HIGH biodiversity.",ans:true,exp:"Correct! These are the most biodiverse ecosystems on Earth."},
+  {q:"Climate change is a threat to biodiversity on Earth.",ans:true,exp:"Correct! Climate change alters habitats and threatens many species."},
+  {q:"Habitat restoration can have a positive impact on biodiversity in an area.",ans:true,exp:"Correct! Restoring habitats provides homes and resources for native species."},
+  {q:"A community consists of all organisms in an ecosystem that belong to the same species.",ans:false,exp:"False — that describes a POPULATION. A community = ALL species in an area."}
+];
+
+const MATCH_TERMS = [
+  {term:"Photosynthesis",def:"The process that converts light energy into food (sugar) in plants",letter:"B"},
+  {term:"Cellular Respiration",def:"The process that breaks down food to release energy in cells",letter:"I"},
+  {term:"Detritivore",def:"An organism that feeds on dead or decaying matter",letter:"E"},
+  {term:"Mutualism",def:"A symbiotic relationship where both species benefit",letter:"F"},
+  {term:"Commensalism",def:"A symbiotic relationship in which one species benefits and the other is unaffected",letter:"J"},
+  {term:"Parasitism",def:"A symbiotic relationship in which one species benefits and the other is harmed",letter:"A"},
+  {term:"Biotic Potential",def:"The maximum growth a population can reach when no limiting factors exist",letter:"D"},
+  {term:"Nitrogen Fixation",def:"The process by which bacteria convert atmospheric nitrogen into a usable form",letter:"G"},
+  {term:"Biodiversity Index",def:"A ratio that compares the number of species to the total number of organisms",letter:"C"},
+  {term:"Habitat Destruction",def:"The destruction or removal of an organism's natural living place",letter:"H"}
+];
+
+let currentLevel, questions, qIndex, score, scores = {mcq:null,tf:null,match:null};
+let selectedTerm = null, matchScore = 0, matchDone = 0;
+
+function goHome() {
+  document.getElementById('home').style.display='flex';
+  document.getElementById('game').style.display='none';
+  document.getElementById('result').style.display='none';
+  updateHomeStars();
+}
+
+function updateHomeStars() {
+  ['mcq','tf','match'].forEach(lvl => {
+    const el = document.getElementById('stars-'+lvl);
+    if (scores[lvl] !== null) {
+      const max = lvl==='mcq'?40:10;
+      const pct = scores[lvl]/max;
+      const s = pct>=0.9?'⭐⭐⭐':pct>=0.7?'⭐⭐':pct>=0.5?'⭐':'';
+      el.innerHTML = s + ' <span style="font-size:.75rem;color:#94a3b8">' + scores[lvl] + '/' + max + '</span>';
+    }
+  });
+}
+
+function startLevel(level) {
+  currentLevel = level;
+  score = 0;
+  qIndex = 0;
+  document.getElementById('home').style.display='none';
+  document.getElementById('result').style.display='none';
+  document.getElementById('game').style.display='block';
+
+  if (level==='mcq') {
+    questions = shuffle([...MCQ]);
+    document.getElementById('level-title').textContent = 'Level 1 — Multiple Choice';
+    document.getElementById('q-total').textContent = questions.length;
+  } else if (level==='tf') {
+    questions = shuffle([...TF]);
+    document.getElementById('level-title').textContent = 'Level 2 — True / False';
+    document.getElementById('q-total').textContent = questions.length;
+  } else {
+    document.getElementById('level-title').textContent = 'Level 3 — Matching';
+    document.getElementById('q-total').textContent = '1';
+    renderMatch();
+    return;
+  }
+  renderQuestion();
+}
+
+function shuffle(arr) { return arr.sort(()=>Math.random()-.5); }
+
+function renderQuestion() {
+  const q = questions[qIndex];
+  const total = questions.length;
+  document.getElementById('q-disp').textContent = qIndex+1;
+  document.getElementById('q-label').textContent = 'Question '+(qIndex+1)+' of '+total;
+  document.getElementById('q-text').textContent = q.q;
+  document.getElementById('prog').style.width = ((qIndex/total)*100)+'%';
+  document.getElementById('score-disp').textContent = score;
+  document.getElementById('feedback').style.display='none';
+  document.getElementById('btn-next').style.display='none';
+
+  const body = document.getElementById('q-body');
+  if (currentLevel==='mcq') {
+    body.innerHTML = '<div class="options">'+
+      q.opts.map((o,i)=>`<button class="opt-btn" onclick="answerMCQ(${i},this)">
+        <span class="opt-letter">${'ABCD'[i]}</span>${o}</button>`).join('')+'</div>';
+  } else {
+    body.innerHTML = '<div class="tf-row">'+
+      `<button class="tf-btn" onclick="answerTF(true,this)">✅ True</button>`+
+      `<button class="tf-btn" onclick="answerTF(false,this)">❌ False</button>`+
+      '</div>';
+  }
+}
+
+function answerMCQ(idx, btn) {
+  const q = questions[qIndex];
+  const btns = document.querySelectorAll('.opt-btn');
+  btns.forEach(b=>b.disabled=true);
+  const correct = idx===q.ans;
+  btns[q.ans].classList.add('correct');
+  if (!correct) btn.classList.add('wrong');
+  if (correct) score++;
+  showFeedback(correct, q.exp);
+}
+
+function answerTF(val, btn) {
+  const q = questions[qIndex];
+  const btns = document.querySelectorAll('.tf-btn');
+  btns.forEach(b=>b.disabled=true);
+  const correct = val===q.ans;
+  btn.classList.add(correct?'correct':'wrong');
+  if (!correct) {
+    btns[q.ans?0:1].classList.add('correct');
+  }
+  if (correct) score++;
+  showFeedback(correct, q.exp);
+}
+
+function showFeedback(correct, exp) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback '+(correct?'ok':'err');
+  fb.innerHTML = '<strong>'+(correct?'✅ Correct!':'❌ Incorrect')+'</strong>'+exp;
+  fb.style.display='block';
+  document.getElementById('btn-next').style.display='block';
+}
+
+function nextQuestion() {
+  qIndex++;
+  if (qIndex>=questions.length) {
+    scores[currentLevel]=score;
+    showResult(score, questions.length);
+  } else {
+    renderQuestion();
+  }
+}
+
+// ── MATCHING ──
+function renderMatch() {
+  selectedTerm = null; matchScore = 0; matchDone = 0;
+  document.getElementById('q-disp').textContent = '1';
+  document.getElementById('q-label').textContent = 'Matching Exercise';
+  document.getElementById('q-text').textContent = 'Click a term on the left, then click its matching definition on the right.';
+  document.getElementById('prog').style.width = '0%';
+  document.getElementById('score-disp').textContent = '0';
+  document.getElementById('feedback').style.display='none';
+  document.getElementById('btn-next').style.display='none';
+
+  const terms = shuffle([...MATCH_TERMS]);
+  const defs = shuffle([...MATCH_TERMS]);
+
+  const body = document.getElementById('q-body');
+  body.innerHTML = `<div class="match-area">
+    <div><h3>Terms</h3>
+      ${terms.map(t=>`<div class="match-item" id="term-${t.letter}" data-letter="${t.letter}" onclick="selectTerm(this)">${t.term}</div>`).join('')}
+    </div>
+    <div><h3>Definitions</h3>
+      ${defs.map(d=>`<div class="match-item" id="def-${d.letter}" data-letter="${d.letter}" onclick="selectDef(this)">${d.def}</div>`).join('')}
+    </div>
+  </div>
+  <div class="match-score" id="match-msg">Matched: 0 / 10</div>`;
+}
+
+function selectTerm(el) {
+  if (el.classList.contains('matched-ok')||el.classList.contains('matched-err')) return;
+  document.querySelectorAll('.match-item.selected').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTerm = el;
+}
+
+function selectDef(el) {
+  if (!selectedTerm) return;
+  if (el.classList.contains('matched-ok')||el.classList.contains('matched-err')) return;
+  const tLetter = selectedTerm.dataset.letter;
+  const dLetter = el.dataset.letter;
+  const correct = tLetter===dLetter;
+  selectedTerm.classList.remove('selected');
+  selectedTerm.classList.add(correct?'matched-ok':'matched-err');
+  el.classList.add(correct?'matched-ok':'matched-err');
+  if (correct) matchScore++;
+  matchDone++;
+  selectedTerm = null;
+  document.getElementById('match-msg').textContent = `Matched: ${matchScore} / 10`;
+  document.getElementById('score-disp').textContent = matchScore;
+  document.getElementById('prog').style.width = (matchDone/10*100)+'%';
+  if (matchDone===10) {
+    scores['match']=matchScore;
+    setTimeout(()=>showResult(matchScore,10), 600);
+  }
+}
+
+function showResult(s, total) {
+  document.getElementById('game').style.display='none';
+  document.getElementById('result').style.display='flex';
+  const pct = s/total;
+  const stars = pct>=0.9?'⭐⭐⭐':pct>=0.7?'⭐⭐':pct>=0.5?'⭐':'';
+  const msg = pct>=0.9?'Outstanding! You mastered this level!':pct>=0.7?'Great work! A little more review and you\'ll ace the exam.':pct>=0.5?'Good effort! Review the explanations and try again.':'Keep studying! Read through the material and give it another shot.';
+  const clr = pct>=0.9?'#22c55e':pct>=0.7?'#38bdf8':pct>=0.5?'#f59e0b':'#ef4444';
+  document.getElementById('result-inner').innerHTML = `
+    <h2 style="color:${clr}">${pct>=0.9?'🏆 Excellent!':pct>=0.7?'🎉 Well Done!':pct>=0.5?'👍 Not Bad!':'📚 Keep Trying!'}</h2>
+    <div class="big-score" style="color:${clr}">${s} <span style="font-size:1.4rem;color:#64748b">/ ${total}</span></div>
+    <div class="stars">${stars||'—'}</div>
+    <p class="result-msg">${msg}</p>
+    <div class="result-btns">
+      <button class="primary" onclick="startLevel('${currentLevel}')">🔄 Try Again</button>
+      <button onclick="goHome()">🏠 Home</button>
+    </div>`;
+  updateHomeStars();
+}
+
+goHome();
+</script>
+</body>
+</html>
